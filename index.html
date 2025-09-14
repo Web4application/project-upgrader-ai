@@ -23,6 +23,71 @@
   </style>
   <!-- Optional: If you host WebLLM locally/CDN, include it here. The JS will also detect window.WebLLM dynamically. -->
   <!-- <script src="https://unpkg.com/@mlc-ai/web-llm/dist/index.js"></script> -->
+  <style>
+  /* Diff modal styles */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    display: none; align-items: center; justify-content: center; z-index: 1000;
+  }
+  .modal {
+    background: #fff; max-width: 980px; width: 96%; max-height: 86vh;
+    border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  .modal-header, .modal-footer {
+    padding: 12px 16px; border-bottom: 1px solid #eee;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-footer { border-top: 1px solid #eee; border-bottom: 0; }
+  .modal-title { font-weight: 600; }
+  .modal-body { padding: 0; overflow: auto; }
+  .diff-list { padding: 10px; display: grid; gap: 14px; }
+  .diff-item { border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
+  .diff-item-header {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #fafafa; border-bottom: 1px solid #eee;
+  }
+  .diff-filename { font-weight: 600; }
+  .diff-panels { display: grid; grid-template-columns: 1fr 1fr; }
+  .panel {
+    padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px; line-height: 1.4; overflow: auto; max-height: 300px;
+    border-right: 1px solid #f3f4f6;
+  }
+  .panel:last-child { border-right: 0; }
+  .line { white-space: pre; display: block; }
+  .line.equal { background: #fff; }
+  .line.add { background: #ecfdf5; }
+  .line.del { background: #fef2f2; text-decoration: line-through; }
+  .controls { display: flex; gap: 8px; align-items: center; }
+  .btn { padding: 8px 10px; border-radius: 6px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; }
+  .btn.primary { background: #111827; color: #fff; border-color: #111827; }
+  .btn.ghost { background: transparent; }
+</style>
+
+<div id="diffBackdrop" class="modal-backdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="diffTitle">
+    <div class="modal-header">
+      <div class="modal-title" id="diffTitle">Review AI changes</div>
+      <div class="controls">
+        <label><input type="checkbox" id="selectAllDiff" checked /> Select all</label>
+        <button class="btn" id="closeDiff">Close</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div id="diffList" class="diff-list"></div>
+    </div>
+    <div class="modal-footer">
+      <div class="controls">
+        <span id="diffSummary" class="muted"></span>
+      </div>
+      <div class="controls">
+        <button class="btn" id="commitSeparate">Commit selected (separate)</button>
+        <button class="btn primary" id="commitSingle">Commit selected (single commit)</button>
+      </div>
+    </div>
+  </div>
+</div>
+  
 </head>
 <body>
   <header>
