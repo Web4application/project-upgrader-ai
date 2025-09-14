@@ -1,59 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Web4 AI Project Assistant</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://unpkg.com/localforage/dist/localforage.min.js"></script>
-  <script src="https://mlc.ai/web-llm/dist/index.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="static/mlc-favicon.ico" />
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 20px; line-height: 1.4; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    h1 { margin: 0; font-size: 20px; }
+    section { margin-top: 20px; }
+    .row { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+    .panel { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; min-width: 300px; flex: 1; }
+    .buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+    textarea { width: 100%; min-height: 120px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    pre, code { white-space: pre-wrap; word-break: break-word; }
+    .footer { margin-top: 24px; color: #6b7280; font-size: 12px; }
+    .file-list { max-height: 220px; overflow: auto; border: 1px dashed #ddd; padding: 8px; border-radius: 6px; }
+    .muted { color: #6b7280; font-size: 12px; }
+    label.inline { display: inline-flex; align-items: center; gap: 8px; }
+    .danger { color: #b91c1c; }
+  </style>
+  <!-- Optional: If you host WebLLM locally/CDN, include it here. The JS will also detect window.WebLLM dynamically. -->
+  <!-- <script src="https://unpkg.com/@mlc-ai/web-llm/dist/index.js"></script> -->
 </head>
 <body>
-
   <header>
     <h1>Web4 AI Project Assistant</h1>
+    <label class="inline">
+      <input type="checkbox" id="toggleOnlineAI" checked />
+      Use online model when available
+    </label>
   </header>
 
-  <!-- File Management Section -->
-  <section id="fileManagement">
-    <h2>File Management</h2>
-    <input type="file" id="fileInput" multiple />
-    <button onclick="loadFiles()">Load Files</button>
-    <button onclick="downloadAll()">Download Project</button>
-  </section>
+  <section class="row">
+    <div class="panel" style="max-width:420px;">
+      <h2>Files</h2>
+      <input type="file" id="fileInput" multiple />
+      <div class="buttons" style="margin-top: 8px;">
+        <button id="btnLoadFiles">Load files</button>
+        <button id="btnClearFiles">Clear</button>
+        <button id="btnDownload">Download project (zip)</button>
+      </div>
+      <div class="file-list" id="fileList" style="margin-top: 10px;"></div>
+      <div class="muted">Supported: text-based code/docs. Binary files are skipped.</div>
 
-  <hr>
+      <h3 style="margin-top:16px;">Local storage</h3>
+      <div class="buttons">
+        <button id="btnSaveLocal">Save to local storage</button>
+        <button id="btnLoadLocal">Load from local storage</button>
+      </div>
+    </div>
 
-  <!-- AI Operations Section -->
-  <section id="aiOperations">
-    <h2>AI Options</h2>
-    <label>
-      <input type="checkbox" id="toggleOnlineAI" checked> Use Online GPT-4
-    </label>
-    <div>
-      <button onclick="runAIRefactor()">Run AI Refactor</button>
-      <button onclick="runAnalysis()">Analyze Code</button>
-      <button onclick="runDocGen()">Generate Documentation</button>
-      <button onclick="runFormat()">Format Code</button>
-      <button onclick="runUnitTests()">Generate Unit Tests</button>
-      <button onclick="runCommenting()">Add Code Comments</button>
+    <div class="panel">
+      <h2>AI operations</h2>
+      <div class="buttons">
+        <button id="btnRefactor">Run AI Refactor</button>
+        <button id="btnAnalyze">Analyze Code</button>
+        <button id="btnDocGen">Generate Docs</button>
+        <button id="btnFormat">Format Code</button>
+        <button id="btnTests">Generate Tests</button>
+        <button id="btnComments">Add Comments</button>
+      </div>
+
+      <h3 style="margin-top:16px;">Custom prompt</h3>
+      <textarea id="customPrompt" placeholder="Describe your AI request..."></textarea>
+      <div class="buttons" style="margin-top: 8px;">
+        <button id="btnRunCustom">Run Custom AI</button>
+        <button id="btnSummarize">Summarize Project</button>
+      </div>
+
+      <h3 style="margin-top:16px;">AI → GitHub workflows</h3>
+      <div class="buttons">
+        <button id="btnRefactorCommitOne">Refactor & Commit (Single File)</button>
+        <button id="btnRefactorCommitMany">Refactor & Commit All (Separate Commits)</button>
+        <button id="btnRefactorCommitSingle">Refactor & Commit All (Single Commit)</button>
+        <button id="btnAuto">Auto AI → GitHub</button>
+      </div>
+
+      <div class="muted danger" style="margin-top:8px;">
+        Never hardcode long-lived tokens in production. Prefer short-lived tokens, server-side proxies, or OAuth app flows.
+      </div>
+    </div>
+
+    <div class="panel" style="min-width: 360px;">
+      <h2>Output</h2>
+      <pre id="output" style="min-height: 220px;"></pre>
     </div>
   </section>
 
-  <hr>
-
-  <!-- Local Storage Section -->
-  <section id="localStorage">
-    <h2>Local Storage</h2>
-    <button onclick="saveToLocal()">Save to Local Storage</button>
-    <button onclick="loadFromLocal()">Load from Local Storage</button>
-  </section>
-
-  <hr>
-  <!-- Output Section -->
-  <section id="outputSection">
-    <div id="output"></div>
-  </section>
+  <div class="footer">
+    Built for project upgrades with in-browser AI and GitHub commit automation.
+  </div>
 
   <script src="assistance.js"></script>
 </body>
